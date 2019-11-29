@@ -202,13 +202,13 @@
 //                         />
 //                     </div>
 //                </div>
-//                <div className={classes.buttonWrapper}>
-//                    <Button variant="contained"
-//                         disabled = {flag}
-//                         onClick={changeName} className={classes.transferButton}>
-//                         {t("register")}
-//                   </Button>
-//                </div>
+               // <div className={classes.buttonWrapper}>
+               //     <Button variant="contained"
+               //          disabled = {flag}
+               //          onClick={changeName} className={classes.transferButton}>
+               //          {t("register")}
+               //    </Button>
+               // </div>
 //             </CardBody>
 //         </Card>
 //     </>)

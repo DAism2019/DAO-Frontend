@@ -31,23 +31,23 @@ import AllDaos from "views/AllDaos/AllDaos.jsx"
 // import Guide from 'views/Guide/Guide.jsx'
 // import SearchDapp from 'views/SearchDapp/SearchDapp.jsx'
 // import RegisterDapp from 'views/RegisterDapp/RegisterDapp.jsx'
-// import DaoDetail from 'views/DappDetail/DappDetail.jsx'
+import DaoDetail from 'views/DaoDetail/DaoDetail.jsx'
 
 const dashboardRoutes = [
     {
         path: "latest",
         name: "latest_dao",
         icon: AppsIcon,
-        component: AllDapps,
+        component: AllDaos,
         layout: "/"
     },
-    // {
-    //     path: "full",
-    //     name: "full_dao",
-    //     icon: FormatAlignJustifyIcon,
-    //     component: DappDetail,
-    //     layout: "/"
-    // },
+    {
+        path: "full",
+        name: "full_dao",
+        icon: FormatAlignJustifyIcon,
+        component: DaoDetail,
+        layout: "/"
+    },
     // {
     //     path: "register",
     //     name: "register_dapp",

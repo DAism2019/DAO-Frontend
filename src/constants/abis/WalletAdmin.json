@@ -82,6 +82,11 @@
           "indexed": false,
           "name": "templateIndex",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "amount",
+          "type": "uint256"
         }
       ],
       "name": "createWalletSuc",

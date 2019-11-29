@@ -27,7 +27,7 @@ import TableCell from "@material-ui/core/TableCell";
 import Button from '@material-ui/core/Button';
 // import { Link } from 'react-router-dom';
 import { isMobile } from 'react-device-detect'
-import { getPathBase } from 'utils'
+import { getPathBase,shortenAddress } from 'utils'
 import { Link } from 'react-router-dom';
 // core components
 import tableStyle from "assets/jss/material-dashboard-react/components/tableStyle.jsx";
@@ -73,20 +73,15 @@ function CustomTable({ ...props }) {
         <TableBody>
           {tableData.map((prop, key) => {
             return (
-
                   <TableRow key={key} className={classes.tableBodyRow}>
                     {prop.map((_prop, key) => {
-                        if(key===0){
-                            return null
-                        }
                       return (
                         <TableCell className={classes.tableCell} key={key} style={{fontSize:FONT_SIZE}}>
-                            {key ===1 ? <Link  to={"/full#" + prop[0]} > {_prop} </Link> :_prop}
+                            {key ===1 ? <Link to={"/full#" + prop[1]} > { isMobile ? shortenAddress(_prop) : _prop} </Link> :_prop}
                         </TableCell>
                       );
                     })}
                   </TableRow>
-
             );
           })}
         </TableBody>

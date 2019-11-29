@@ -128,8 +128,11 @@ function getMsgByNet(t,networkId) {
         case '42':
             msg = 'kovan'
             break;
+        case '5777':
+            msg = 'localhost'
+            break;
         default:
-            msg = "others"
+            msg = "custom"
             break;
     }
     return t("switchNetwork") + msg

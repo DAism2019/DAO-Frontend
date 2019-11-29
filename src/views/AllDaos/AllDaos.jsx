@@ -21,7 +21,7 @@ import Card from "components/Card/Card.jsx";
 import CardHeader from "components/Card/CardHeader.jsx";
 import CardBody from "components/Card/CardBody.jsx";
 import {makeStyles} from '@material-ui/core/styles';
-import { useStoreInfoContract,useStoreAdminContract } from 'hooks';
+import { useWalletInfosContract,useWalletAdminContract } from 'hooks';
 // import {useWeb3Context} from 'web3-react';
 import Pagination from "material-ui-flat-pagination"
 import GridItem from "components/Grid/GridItem.jsx";
@@ -62,8 +62,8 @@ const useStyles = makeStyles(theme => ({
 export default function AllDapp() {
     const classes = useStyles()
     const {t} = useTranslation()
-    const store_info = useStoreInfoContract()
-    const store_admin = useStoreAdminContract()
+    const wallet_infos = useWalletInfosContract()
+    const wallet_admin = useWalletAdminContract()
     const [offset,setOffset] = useState(0)
     const [amount,setAmount] = useState(-1)
     const [idStr,setIdStr] = useState('')
@@ -71,26 +71,27 @@ export default function AllDapp() {
 
     //refresh amount
     useEffect(()=>{
-        if(store_info && store_admin){
+        if(wallet_infos && wallet_admin ){
             let stale = false
             async function getAmount(){
-                let _amount = await store_info.nonce()
+                let _amount = await wallet_infos.nonce()
                 if(!stale){
                     _amount = + _amount
                     setAmount(_amount)
                 }
             }
             getAmount()
-            store_admin.on("RegisterDappSuc", (creator,store,id,name, event) => {
-                setAmount(+id)
+            wallet_admin.on("createWalletSuc", (creator,wallet,name,templateIndex,amount,event) => {
+                setAmount(+amount)
             })
             return() => {
                 stale = true;
-                store_admin.removeAllListeners('RegisterDappSuc')
+                wallet_admin.removeAllListeners('createWalletSuc')
             }
         }
-    },[store_info,store_admin])
+    },[wallet_infos,wallet_admin])
 
+    //refresh idArray
     useEffect(()=>{
         if(amount > 0){
             let indexArray = getIndexArrayReverse(amount,PAGE_SIZE,offset);
@@ -99,41 +100,37 @@ export default function AllDapp() {
         }
     },[amount,offset])
 
-    //refresh idArray
+    //refresh list
     useEffect(()=>{
-        if( store_info && idStr ){
+        if( wallet_infos && idStr ){
             let stale = false
             let _idArray = idStr.split(SPLITTER);
-            function getInfoByOffset(){
+            function getInfoById(){
                 let allPromise = []
                 for(let i=0;i<_idArray.length;i++){
                     let _id = + _idArray[i];
-                    allPromise.push(store_info.allStoreInfos(_id + 1).catch(() => {}))
+                    allPromise.push(wallet_infos.getWalletInfoById(_id + 1).catch(() => {}))
                 }
-
                 Promise.all(allPromise).then(results =>{
                     let _tableData = []
                     for(let j=0;j<_idArray.length;j++){
-                        let info = results[j];
-                        let _id = info[2].toString()
-                        let _name = info[4]
-                        let _label = info[6]
-                        let _createTime =  (+ info[3]) * 1000
-                        _tableData.push([_id,_name,_label,convertTimetoTimeString(_createTime)])
+                        let [address,,name,,createTime] = results[j]
+                        createTime =  + (createTime.mul(1000))
+                        _tableData.push([name,address,convertTimetoTimeString(createTime)])
                     }
                     if(!stale){
                         setTableData(_tableData)
                     }
                 });
             }
-            getInfoByOffset()
+            getInfoById()
             return ()=>{
                 stale = true
             }
         }else{
             setTableData([])
         }
-    },[store_info,idStr])
+    },[wallet_infos,idStr])
 
     return (<>
         <GridContainer>
@@ -141,16 +138,16 @@ export default function AllDapp() {
             <Card plain>
               <CardHeader plain color="primary">
                 <h4 className={classes.cardTitleWhite}>
-                    {amount === -1 ? t("getting") :t("dapp_amount").replace("{amount}",(amount < 0 ? 0 :amount))}
+                    {amount === -1 ? t("getting") :t("dao_amount").replace("{amount}",(amount < 0 ? 0 :amount))}
                 </h4>
                 <p className={classes.cardCategoryWhite}>
-                  {t("show_dapp")}
+                  {t("show_dao")}
                 </p>
               </CardHeader>
               <CardBody>
                 <Table
                   tableHeaderColor="primary"
-                  tableHead={[t("dapp_name"),t("dapp_label"),t("create_time")]}
+                  tableHead={[t("name"),t("address"),t("create_time")]}
                   tableData={tableData}
                 />
               </CardBody>

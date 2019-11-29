@@ -84,6 +84,41 @@
       "constant": true,
       "inputs": [
         {
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "name": "getWalletInfoById",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        },
+        {
+          "name": "",
+          "type": "address"
+        },
+        {
+          "name": "",
+          "type": "string"
+        },
+        {
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
           "name": "wallet",
           "type": "address"
         }
@@ -170,7 +205,12 @@
         }
       ],
       "name": "saveWalletInfo",
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"

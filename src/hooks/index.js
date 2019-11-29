@@ -51,7 +51,7 @@ export function useWalletAdminContract(withSignerIfPossible = true) {
 
   return useMemo(() => {
     try {
-      return getMethodAdminContract(networkId, library, withSignerIfPossible ? account : undefined)
+      return getWalletAdminContract(networkId, library, withSignerIfPossible ? account : undefined)
     } catch {
       return null
     }
@@ -64,7 +64,7 @@ export function useWalletInfosContract(withSignerIfPossible = true) {
 
   return useMemo(() => {
     try {
-      return getMethodInfoContract(networkId, library, withSignerIfPossible ? account : undefined)
+      return getWalletInfosContract(networkId, library, withSignerIfPossible ? account : undefined)
     } catch {
       return null
     }

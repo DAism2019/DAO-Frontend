@@ -31,6 +31,15 @@ const ETHERSCAN_PREFIXES = {
     42: 'kovan.'
 }
 
+// get the ether balance of an address
+export async function getEtherBalance(address, library) {
+  if (!isAddress(address)) {
+    throw Error(`Invalid 'address' parameter '${address}'`)
+  }
+
+  return library.getBalance(address)
+}
+
 export function getEtherscanLink(networkId, data, type) {
     const prefix = `https://${ETHERSCAN_PREFIXES[networkId] || ETHERSCAN_PREFIXES[1]}etherscan.io`
 
