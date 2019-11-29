@@ -1,0 +1,84 @@
+{
+  "name": "DaoStore",
+  "version": "1.0.0",
+  "description": "This is a  project of registering a dao in multiSignWallet",
+  "private": false,
+  "main": "dist/index.js",
+  "homepage": ".",
+  "dependencies": {
+    "@material-ui/core": "4.1.0",
+    "@material-ui/icons": "4.1.0",
+    "chartist": "0.10.1",
+    "classnames": "2.2.6",
+    "copy-to-clipboard": "^3.2.0",
+    "ethereum-tx-decoder": "^3.0.0",
+    "ethers": "^4.0.37",
+    "history": "^4.10.1",
+    "i18next": "^19.0.0",
+    "i18next-browser-languagedetector": "^4.0.1",
+    "i18next-xhr-backend": "^3.2.1",
+    "jazzicon": "^1.5.0",
+    "material-ui-flat-pagination": "^4.0.0",
+    "perfect-scrollbar": "1.4.0",
+    "polished": "^3.4.1",
+    "prop-types": "15.7.2",
+    "react": "^16.9.0",
+    "react-chartist": "0.13.3",
+    "react-device-detect": "^1.9.9",
+    "react-dom": "^16.9.0",
+    "react-feather": "^2.0.3",
+    "react-file-picker": "0.0.6",
+    "react-final-form": "^6.3.0",
+    "react-i18next": "^11.0.1",
+    "react-router-dom": "5.0.1",
+    "react-scripts": "3.1.1",
+    "react-svg": "^10.0.21",
+    "react-swipeable-views": "0.13.3",
+    "reactjs-localstorage": "0.0.7",
+    "reactjs-pagination": "0.0.8",
+    "styled-components": "^4.3.2",
+    "svg-to-dataurl": "^1.0.0",
+    "svgson": "^4.0.0",
+    "web3-react": "^5.0.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject",
+    "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm start",
+    "lint:check": "eslint . --ext=js,jsx;  exit 0",
+    "lint:fix": "eslint . --ext=js,jsx --fix;  exit 0",
+    "build-package-css": "cp src/assets/css/material-dashboard-react.css dist/material-dashboard-react.css",
+    "build-package": "npm run build-package-css && babel src --out-dir dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/creativetimofficial/material-dashboard-react.git"
+  },
+  "keywords": [],
+  "author": "Creative Tim <hello@creative-tim.com> (https://www.creative-tim.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/creativetimofficial/material-dashboard-react/issues"
+  },
+  "optionalDependencies": {
+    "@types/googlemaps": "3.36.4",
+    "@types/markerclustererplus": "2.1.33",
+    "ajv": "6.10.0",
+    "typescript": "3.5.1"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "4.3.0",
+    "eslint-plugin-prettier": "3.1.0",
+    "prettier": "1.18.2"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": []
+  }
+}

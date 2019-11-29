@@ -1,0 +1,34 @@
+<h1 style="text-align: center;">去中心化媒体网络使用指南</h1>
+
+<h3>一、系统简介</h3>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;去中心化媒体网络是为了解决中心化存储非永久性的问题而提出的。它将整个文章存储在以太坊上而永久保存，并且可以随时查询。受制于区块链和以太坊的一些特性，这个系统只能存储较短的文章（大小不能超过12K），暂不支持修改和删除。</p>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; 本网络中的文章指的是html格式的文章。</p>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; 本网络支持文章中插入SVG图片，它也保存在以太坊上，可以随时将SVG图片代码下载下来重新插入到别的文章中进行复用。SVG代码的大小也不能超过12K。</p>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; 使用本网络你需要知道一点以太坊的基础知识、一个以太坊浏览器（推荐chrome）浏览器、一个钱包（推荐使用metamask)和一个地址。</p>
+
+
+<h3>二、相关地址</h3>
+
+<ol>
+	<li>chrome浏览器下载地址:<a href="https://www.google.com/intl/zh-CN/chrome/" target = '_blank'>https://www.google.com/intl/zh-CN/chrome/</a></li>
+	<li>metamask下载地址：<a href="https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn?hl=zh-419" target = '_blank'>https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn?hl=zh-419</a>&nbsp;需要先安装chrome</li>
+	<li>在线编辑器：<a href="https://naturaldao.io/cn/tool-2/editor.html" target = '_blank'>https://naturaldao.io/cn/tool-2/editor.html</a></li>
+</ol>
+
+<h3>三、操作使用</h3>
+
+<ol>
+	<li>使用在线编辑器写好文章，点击左上角第二个图标（源码），会显示编辑文章的html源码，</li>
+	<li>将源码copy至本系统文章上传栏目中的文本输入框，点击预览</li>
+	<li>点击解析，然后按步操作</li>
+</ol>
+
+<h3>四、其它事项</h3>
+
+<ol>
+	<li>创建以太坊账号（地址）：安装好metamask后点击打开，点击创建新账号，记住提供给你的助记词或者私钥</li>
+</ol>
