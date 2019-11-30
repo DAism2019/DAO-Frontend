@@ -30,6 +30,13 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import ClickAwayListener from '@material-ui/core/ClickAwayListener';
+import Grow from '@material-ui/core/Grow';
+import Popper from '@material-ui/core/Popper';
+import MenuItem from '@material-ui/core/MenuItem';
+import MenuList from '@material-ui/core/MenuList';
+import SendIcon from '@material-ui/icons/Send';
+import Paper from '@material-ui/core/Paper';
 import copy from 'copy-to-clipboard'
 import { isMobile } from 'react-device-detect'
 import { useWalletInfosContract,useTemplateOneContract} from 'hooks';
@@ -37,16 +44,24 @@ import { useSnackbarContext } from 'contexts/SnackBarProvider.jsx';
 import { useTranslation } from 'react-i18next'
 import Pagination from "material-ui-flat-pagination"
 import {useWeb3Context} from 'web3-react';
-import { getIndexArray,convertTimetoTimeString,getContract,getEtherBalance,
-    shortenAddress,calculateGasMargin,isAddress } from 'utils'
+import { getIndexArray,convertTimetoTimeString,getEtherBalance,getIntBigNum,
+    shortenAddress,calculateGasMargin,isAddress,getERC20Contract } from 'utils'
 import styled from 'styled-components'
 import { utils,constants } from 'ethers'
 import CustomInput from "components/CustomInput/CustomInput.jsx"
+import DownIcon from '@material-ui/icons/KeyboardArrowDown';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import Typography from '@material-ui/core/Typography';
+import GroupIcon from '@material-ui/icons/Group';
+import TransferWithinAStationIcon from '@material-ui/icons/TransferWithinAStation';
+import SettingsEthernetIcon from '@material-ui/icons/SettingsEthernet';
+import AcUnitIcon from '@material-ui/icons/AcUnit';
 // import * as txDecoder from 'ethereum-tx-decoder';
 
-const TemplateOne = lazy(() => import('../Template/TemplateOne.jsx'));
+// const TemplateOne = lazy(() => import('../Template/TemplateOne.jsx'));
 
 const GAS_MARGIN = utils.bigNumberify(1000);
+const SELECT_ITEM = ['select_transction','transfer_eth_admin','owner_admin','custom_transaction','transfer_20_token']
 
 const ContentWrapperTwo = styled.p`
      margin: auto;
@@ -62,20 +77,21 @@ const useStyles = makeStyles(theme => ({
         marginTop: "0",
         marginBottom: "0"
     },
-    copyText:{
-     // width:"100%",
-     textAlign:"right",
-     textDecoration:"underline",
-     fontSize:"13px",
-     marginBottom: isMobile ? theme.spacing(0) : theme.spacing(-2)
+    cardCategoryWhiteOther: {
+        display: 'flex',
+        justifyContent:"space-between",
+        // color: "rgba(33,33,33,.99)",
+        color: "white",
+        margin: "0",
+        fontSize: "14px",
+        marginTop: "0",
+        marginBottom: "0"
     },
-    RewardText:{
-     // width:"100%",
-     textAlign:"left",
-     // textDecoration:"underline",
-     color:"red",
-     fontSize:isMobile?"13px":"18px",
-     // marginBottom: isMobile ? theme.spacing(-1) : theme.spacing(-5)
+    copyText:{
+        textAlign:"right",
+        textDecoration:"underline",
+        fontSize:"13px",
+        marginBottom: isMobile ? theme.spacing(0) : theme.spacing(-2)
     },
     cardTitleWhite: {
         color: "#FFFFFF",
@@ -86,11 +102,11 @@ const useStyles = makeStyles(theme => ({
         marginBottom: "3px",
         textDecoration: "none"
     },
-      transferButton: {
+    transferButton: {
         margin: theme.spacing(2),
         width:isMobile ? "30%" :"10%",
         backgroundColor:'#FF8623'
-      },
+    },
     buttonWrapper:{
         display: 'flex',
         justifyContent:"center"
@@ -101,27 +117,42 @@ const useStyles = makeStyles(theme => ({
         position: "relative"
     },
     note: {
-     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-     bottom: "10px",
-     color: "#00c1c2",
-     display: "flex",
-     flexDirection:"row",
-     wrap:"wrap",
-     fontWeight: "400",
-     fontSize: isMobile ? "13px" : "18px",
-     lineHeight:  isMobile ? "13px" : "18px",
-     left: "0",
-     marginLeft: isMobile ? "10px":"20px",
-     position: "absolute",
-     width: isMobile ? "90px" : "260px",
-     marginTop:isMobile? theme.spacing(-15): theme.spacing(-20),
-     maxWidth:isMobile ? "90px" : "260px"
+        fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+        bottom: "10px",
+        color: "#00c1c2",
+        display: "flex",
+        flexDirection:"row",
+        wrap:"wrap",
+        fontWeight: "400",
+        fontSize: isMobile ? "13px" : "18px",
+        lineHeight:  isMobile ? "13px" : "18px",
+        left: "0",
+        marginLeft: isMobile ? "10px":"20px",
+        position: "absolute",
+        width: isMobile ? "90px" : "260px",
+        marginTop:isMobile? theme.spacing(-15): theme.spacing(-20),
+        maxWidth:isMobile ? "90px" : "260px"
+    },
+    noteOwner: {
+        fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+        color: "#00c1c2",
+        fontWeight: "400",
+        fontSize:  "18px",
+        left: "0",
+        marginLeft: isMobile ? "10px":"20px",
+        marginTop:theme.spacing(3),
+        marginBottom:theme.spacing(3),
     },
     addressTxt: {
         fontSize: isMobile ? "13px" : "18px",
         marginLeft: isMobile ? 20 : 0,
         width: "60%"
     },
+    menuBtn:{
+        color: "rgba(255,255,255,.70)",
+        fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+        marginTop:theme.spacing(-2)
+    }
 }));
 
 const dao_info_init = {
@@ -135,11 +166,18 @@ const dao_info_init = {
 const handle_change_state_init = {
     newOwner:"",
     recipient:"",
-    repalce_address:"",
+    replace_address:"",
     call_address:'',
     call_data:'',
     call_value:0,
-    transferValue:0
+    transferValue:0,
+    token_20_address:'',
+    token_symbol:"",
+    token_balance:"",
+    token_decimals:0,
+    get_token_info:false,
+    get_info_over:false,
+    token_contract:null
 }
 
 function DaoDetail({history}) {
@@ -162,14 +200,52 @@ function DaoDetail({history}) {
     const [open, setOpen] = useState(false);
     const [state,setState] = useState(handle_change_state_init)
     const [balance,setBalance] = useState(0)
+    const [menu_open, setMenu_Open] = React.useState(false);
+    const anchorRef = React.useRef(null);
+    const [selectIndex,setSelectIndex] = useState(0)
 
     const handleClickOpen = () => {
       setOpen(true);
     };
 
     const handleClose = () => {
+        setState({
+            ...state,
+            replace_address:'',
+            recipient:''
+        })
       setOpen(false);
     };
+
+    const handleToggle = () => {
+      setMenu_Open(prevOpen => !prevOpen);
+    };
+
+    const handleItemClick = (event,value) => {
+      // if (anchorRef.current && anchorRef.current.contains(event.target)) {
+      //   return;
+      // }
+      if(selectIndex === value) {
+          return
+      }
+      setState(handle_change_state_init)
+      setSelectIndex(value)
+      setMenu_Open(false);
+    }
+
+    const handleCloseMenu = event => {
+        if (anchorRef.current && anchorRef.current.contains(event.target)) {
+          return;
+        }
+        setMenu_Open(false);
+    };
+
+    function handleListKeyDown(event) {
+        if (event.key === 'Tab') {
+          event.preventDefault();
+          setOpen(false);
+        }
+    }
 
     const copyURL = event =>{
         event.preventDefault();
@@ -178,21 +254,6 @@ function DaoDetail({history}) {
         }
     };
 
-    const removeOwner = owner => () => {
-        //todo
-        let add_func = daoContract.interface.functions.removeOwner
-        let data = add_func.encode([owner])
-        submit_transaction(data)
-    };
-
-    const replaceOwner = owner => () => {
-        //todo
-        setState({
-            ...state,
-            "repalce_address":owner
-        })
-        handleClickOpen()
-    };
     const handleChange = name =>  event => {
         let value = event.target.value
         setState({
@@ -210,9 +271,29 @@ function DaoDetail({history}) {
         if(Number.isNaN(value) || value <= 0) {
             return showSnackbar(t("invalid_number"),'error')
         }
-        value = utils.parseEther("" + value)
+        value = utils.parseEther(state.transferValue)
         submit_transaction('0x',address,value)
     };
+
+    const transferErc20Token = () => {
+        let {token_contract,token_decimals,recipient,call_value} = state
+        if(!recipient || !isAddress(recipient)) {
+            return showSnackbar(t("invalid_address"),"error")
+        }
+        let amount = + call_value;
+        if(Number.isNaN(amount) || amount <= 0) {
+            return showSnackbar(t("invalid_number"),"error")
+        }
+        let result_bigNumber = getIntBigNum(call_value,+token_decimals)
+
+        if(token_contract) {
+            let func = token_contract.interface.functions.transfer;
+            let args = [recipient,result_bigNumber]
+            let data = func.encode(args)
+            submit_transaction(data,token_contract.address)
+        }
+
+    }
 
     const submitCustomWork = () => {
         let address = state.call_address
@@ -268,6 +349,48 @@ function DaoDetail({history}) {
             }
         }
     }
+
+    const removeOwner = owner => () => {
+        let add_func = daoContract.interface.functions.removeOwner
+        let data = add_func.encode([owner])
+        submit_transaction(data)
+    };
+
+    const replaceOwner = owner => () => {
+        setState({
+            ...state,
+            "recipient":owner
+        })
+        handleClickOpen()
+    };
+
+    const handleReplaceOwner = () => {
+        const {recipient,replace_address} = state
+        if(!replace_address || !isAddress(replace_address)) {
+            return showSnackbar(t("invalid_address"),"error")
+        }
+        let _checksum = utils.getAddress(replace_address)
+        if(_checksum === constants.AddressZero) {
+            return showSnackbar(t("zero_address"),'error')
+        }else if (owners.indexOf(_checksum) !== -1) {
+            return showSnackbar(t("owner_existed"),'error')
+        }
+        let replace_func = daoContract.interface.functions.replaceOwner
+        let args = [recipient,replace_address]
+        let data = replace_func.encode(args)
+        handleClose()
+        submit_transaction(data)
+    };
+
+    //show menu
+    const prevOpen = useRef(menu_open);
+    useEffect(() => {
+        if (prevOpen.current === true && menu_open === false) {
+          anchorRef.current.focus();
+        }
+
+        prevOpen.current = menu_open;
+    }, [menu_open]);
 
     //show dao
     useEffect(()=>{
@@ -337,25 +460,86 @@ function DaoDetail({history}) {
         }
     },[account,hasDao,wallet_infos_contract,daoInfo,template_one_contract])
 
+    //refresh owner
     useEffect(()=>{
         if(daoContract) {
             let stale = false;
-            daoContract.getAllOwners().then( owners =>{
-                if(!stale){
-                    setOwners(owners)
-                }
-            }).catch(()=>{})
+            function getAllOwners() {
+                daoContract.getAllOwners().then( owners =>{
+                    if(!stale){
+                        setOwners(owners)
+                    }
+                }).catch(()=>{})
+            }
             getEtherBalance(daoContract.address,library).then( balance => {
                 if(!stale) {
                     setBalance(balance)
                 }
             }).catch(()=>{})
+            daoContract.on('OwnerAddition',(owner,event)=>{
+                getAllOwners()
+            })
+            daoContract.on('OwnerRemoval',(owner,event)=>{
+                getAllOwners()
+            })
+            getAllOwners()
+
             return ()=>{
                 stale = true
+                daoContract.removeAllListeners('OwnerAddition');
+                daoContract.removeAllListeners('OwnerRemoval');
             }
         }
     },[daoContract,library])
 
+
+    //refresh token_20_info
+    useEffect(()=>{
+        let token_20_address = state.token_20_address
+        if(token_20_address && daoContract && isAddress(token_20_address)) {
+            let stale = false
+
+            setState({
+                ...state,
+                get_token_info:true
+            })
+            async function get_info() {
+                 try {
+                    let contract = getERC20Contract(token_20_address,library,account)
+                    let symbol = await contract.symbol();
+                    let decimals = await contract.decimals();
+                    let token_balance = await contract.balanceOf(daoContract.address)
+                    let ten = utils.bigNumberify(10)
+                    token_balance = token_balance.div(ten.pow(decimals))
+                    if(!stale) {
+                        setState({
+                            ...state,
+                            token_symbol:symbol,
+                            token_decimals:decimals,
+                            token_balance:token_balance,
+                            get_token_info:false,
+                            get_info_over:true,
+                            token_contract:contract
+                        })
+                    }
+                }catch(err){
+                     if(!stale){
+                         setState({
+                             ...state,
+                             get_token_info:false
+                         })
+                         showSnackbar(t("invalid_token_20_address"),'error')
+                     }
+                   }
+                }
+            get_info()
+            return () => {
+                stale = true
+            }
+        }
+    },[state.token_20_address,showSnackbar,t,daoContract,account,library])
+
+    //show brief info of dao
     function showDaoInfos() {
         const { address,creator,createTime } = daoInfo;
         return (
@@ -396,32 +580,29 @@ function DaoDetail({history}) {
         )
     }
 
-    function showDaoDetail() {
-        switch (daoInfo.templateIndex) {
-            case 0:
-                return (<TemplateOne contract = {daoContract} />)
-            default:
-                return (<TemplateOne  contract = {daoContract}/>)
-        }
-    }
+    // function showDaoDetail() {
+    //     switch (daoInfo.templateIndex) {
+    //         case 0:
+    //             return (<TemplateOne contract = {daoContract} />)
+    //         default:
+    //             return (<TemplateOne  contract = {daoContract}/>)
+    //     }
+    // }
 
+    //show owner admin ui of dao
     function showOwnerAdmin() {
         return (
-            <Card>
-                <CardHeader color="primary">
-                    <h4 className={classes.cardTitleWhite}>{t("owner_admin")}</h4>
-                    <p className={classes.cardCategoryWhite}>
-                      {t('owner_amount').replace("{amount}",owners.length)}
-                    </p>
-                </CardHeader>
-                <CardBody>
-                   {owners.map((owner,index) => (showOneOwner(owner,index)))}
-                   {showAddOwner()}
-                </CardBody>
-            </Card>
+            <div>
+                 <div className={classes.noteOwner}>
+                          {t(SELECT_ITEM[selectIndex]) + ":" + t('owner_amount').replace("{amount}",owners.length) }
+                 </div>
+                 {owners.map((owner,index) => (showOneOwner(owner,index)))}
+                 {showAddOwner()}
+            </div>
         )
     }
 
+    // show ui item  of owner admin
     function showOneOwner(owner,index) {
         return (
             <div key = {index}>
@@ -453,12 +634,12 @@ function DaoDetail({history}) {
         )
     }
 
+    //show add owner item of owner admin
     function showAddOwner() {
         return (
             <>
                 <div className={classes.typo}>
                    <div className={classes.note}>
-
                            {t("add_owner") + ":"}
                    </div>
                    <CustomInput formControlProps={{
@@ -481,11 +662,11 @@ function DaoDetail({history}) {
         )
     }
 
-    function showDiaglog() {
-        let showAddress = state.repalce_address
+    // show replace ui of owner admin
+    function showReplaceOwnerDiaglog() {
+        let showAddress = state.recipient
         if( isAddress(showAddress) && isMobile)
             showAddress = shortenAddress(showAddress)
-
         return (
             <Dialog open={open} onClose={handleClose} aria-labelledby="form-dialog-title">
                 <DialogTitle id="form-dialog-title">{t("replace_owner")}</DialogTitle>
@@ -499,14 +680,16 @@ function DaoDetail({history}) {
                     id="new_owner_address"
                     label={t("new_owner_address")}
                     type="text"
+                    value={state.replace_address}
                     fullWidth
+                    onChange={handleChange('replace_address')}
                   />
                 </DialogContent>
                 <DialogActions>
                   <Button onClick={handleClose} color="primary">
                     {t("cancel")}
                   </Button>
-                  <Button onClick={handleClose} color="primary">
+                  <Button onClick={handleReplaceOwner} color="primary">
                     {t('confirm')}
                   </Button>
                 </DialogActions>
@@ -514,16 +697,111 @@ function DaoDetail({history}) {
         )
     }
 
+    //show erc20 token transfer ui
+    function show20TokenTransfer() {
+        const {token_symbol,token_address,token_balance,get_token_info,get_info_over,recipient,call_value} = state
+        return (
+            <div>
+                <div className={classes.noteOwner}>
+                     {t(SELECT_ITEM[selectIndex])}
+                </div>
+                <div className={classes.typo}>
+                   <div className={classes.note}>
+                           {t("token_20_address") + ":"}
+                   </div>
+                   <CustomInput formControlProps={{
+                           className: classes.addressTxt
+                       }} inputProps={{
+                           placeholder: t("token_20_address"),
+                           inputProps: {
+                               "aria-label": "SetLabel"
+                           },
+                           value:token_address,
+                           onChange: handleChange('token_20_address')
+                       }}/>
+                </div>
+                <div className={classes.typo}>
+                    <div className={classes.note}>
+                            {t("token_symbol") + ":"}
+                    </div>
+                   <CustomInput formControlProps={{
+                           className: classes.addressTxt
+                       }} inputProps={{
+                           // placeholder: t("token_symbol"),
+                           inputProps: {
+                               "aria-label": "SetLabel"
+                           },
+                           disabled:true,
+                           value:get_token_info ? t('getting') : token_symbol,
+                       }}/>
+                </div>
+                <div className={classes.typo}>
+                    <div className={classes.note}>
+                            {t("token_balance") + ":"}
+                    </div>
+                   <CustomInput formControlProps={{
+                           className: classes.addressTxt
+                       }} inputProps={{
+                           inputProps: {
+                               "aria-label": "SetLabel"
+                           },
+                           disabled:true,
+                           value:get_token_info ? t('getting') : token_balance,
+                       }}/>
+                       <span>
+                           {token_symbol}
+                       </span>
+                </div>
+                <div className={classes.typo}>
+                   <div className={classes.note}>
+                           {t("recipient") + ":"}
+                   </div>
+                   <CustomInput formControlProps={{
+                           className: classes.addressTxt
+                       }} inputProps={{
+                           placeholder: t("recipient"),
+                           inputProps: {
+                               "aria-label": "SetLabel"
+                           },
+                           value:recipient,
+                           onChange: handleChange('recipient')
+                       }}/>
+                </div>
+                <div className={classes.typo}>
+                   <div className={classes.note}>
+                           {t("transfer_20_token_amount") + ":"}
+                   </div>
+                   <CustomInput formControlProps={{
+                           className: classes.addressTxt
+                       }} inputProps={{
+                           placeholder: t("transfer_20_token_amount"),
+                           inputProps: {
+                               "aria-label": "SetLabel"
+                           },
+                           value:state.transferValue,
+                           onChange: handleChange("call_value")
+                       }}/>
+                       <span>
+                           {token_symbol}
+                       </span>
+                </div>
+                <div className={classes.buttonWrapper}>
+                    {/* disabled={!get_info_over} */}
+                    <Button variant="contained"  onClick={transferErc20Token}   className={classes.transferButton}>
+                        {t('transfer')}
+                    </Button>
+                </div>
+        </div>
+        )
+    }
+
+    //show eth transfer ui
     function showTransferEth() {
         return(
-            <Card>
-                <CardHeader color="primary">
-                    <h4 className={classes.cardTitleWhite}>{t("transfer_eth_admin")}</h4>
-                    <p className={classes.cardCategoryWhite}>
-                      {t('eth_amount') + ": " + utils.formatEther(balance) + " ETH"}
-                    </p>
-                </CardHeader>
-                <CardBody>
+            <div>
+                    <div className={classes.noteOwner}>
+                         {t(SELECT_ITEM[selectIndex])}
+                   </div>
                     <div className={classes.typo}>
                        <div className={classes.note}>
                                {t("recipient") + ":"}
@@ -562,81 +840,122 @@ function DaoDetail({history}) {
                            {t('transfer_out')}
                        </Button>
                    </div>
-                </CardBody>
-            </Card>
-
+               </div>
         )
     }
 
+    // show custom transaction ui
     function showCustomWork() {
         return(
-            <Card>
-                <CardHeader color="primary">
-                    <h4 className={classes.cardTitleWhite}>{t("custom_work")}</h4>
-                    <p className={classes.cardCategoryWhite}>
-                      {t('eth_amount') + ": " + utils.formatEther(balance) + " ETH"}
-                    </p>
-                </CardHeader>
-                <CardBody>
-                    <div className={classes.typo}>
-                       <div className={classes.note}>
-                               {t("call_address") + ":"}
-                       </div>
-                       <CustomInput formControlProps={{
-                               className: classes.addressTxt
-                           }} inputProps={{
-                               placeholder: t("call_address"),
-                               inputProps: {
-                                   "aria-label": "SetLabel"
-                               },
-                               value:state.call_address,
-                               onChange: handleChange('call_address')
-                           }}/>
-                   </div>
-                   <div className={classes.typo}>
-                      <div className={classes.note}>
-                              {t("call_value") + ":"}
-                      </div>
-                      <CustomInput formControlProps={{
-                              className: classes.addressTxt
-                          }} inputProps={{
-                              placeholder: t("call_value"),
-                              inputProps: {
-                                  "aria-label": "SetLabel"
-                              },
-                              value:state.call_value,
-                              onChange: handleChange("call_value")
-                          }}/>
-                          <span>
-                              ETH
-                          </span>
-                   </div>
-                   <div className={classes.typo}>
-                      <div className={classes.note}>
-                              {t("call_data") + ":"}
-                      </div>
-                      <CustomInput formControlProps={{
-                              className: classes.addressTxt
-                          }} inputProps={{
-                              placeholder: t("call_data"),
-                              inputProps: {
-                                  "aria-label": "SetLabel"
-                              },
-                              value:state.call_data,
-                              onChange: handleChange("call_data")
-                          }}/>
-                   </div>
-                   <div className={classes.buttonWrapper}>
-                       <Button variant="contained"  onClick={submitCustomWork} className={classes.transferButton}>
-                           {t('submit')}
-                       </Button>
-                   </div>
-                </CardBody>
-            </Card>
-
+            <div>
+                 <div className={classes.noteOwner}>
+                          {t(SELECT_ITEM[selectIndex])}
+                 </div>
+                 <div className={classes.typo}>
+                    <div className={classes.note}>
+                            {t("call_address") + ":"}
+                    </div>
+                    <CustomInput formControlProps={{
+                            className: classes.addressTxt
+                        }} inputProps={{
+                            placeholder: t("call_address"),
+                            inputProps: {
+                                "aria-label": "SetLabel"
+                            },
+                            value:state.call_address,
+                            onChange: handleChange('call_address')
+                    }}/>
+                 </div>
+                 <div className={classes.typo}>
+                    <div className={classes.note}>
+                            {t("call_value") + ":"}
+                    </div>
+                    <CustomInput formControlProps={{
+                            className: classes.addressTxt
+                        }} inputProps={{
+                            placeholder: t("call_value"),
+                            inputProps: {
+                                "aria-label": "SetLabel"
+                            },
+                            value:state.call_value,
+                            onChange: handleChange("call_value")
+                        }}/>
+                        ETH
+                 </div>
+                 <div className={classes.typo}>
+                    <div className={classes.note}>
+                            {t("call_data") + ":"}
+                    </div>
+                    <CustomInput formControlProps={{
+                            className: classes.addressTxt
+                        }} inputProps={{
+                            placeholder: t("call_data"),
+                            inputProps: {
+                                "aria-label": "SetLabel"
+                            },
+                            value:state.call_data,
+                            onChange: handleChange("call_data")
+                        }}/>
+                 </div>
+                 <div className={classes.buttonWrapper}>
+                     <Button variant="contained"  onClick={submitCustomWork} className={classes.transferButton}>
+                         {t('submit')}
+                     </Button>
+                 </div>
+            </div>
         )
     }
 
+    //show menu item
+    function showMenuItem(key) {
+        if(key === 0){
+            return null
+        }
+        return (
+            <MenuItem key={key} onClick={ event => handleItemClick(event,key)} selected={selectIndex === key}>
+                <ListItemIcon>
+                    {getItemIcon(key)}
+                </ListItemIcon>
+                <Typography variant="inherit">{t(SELECT_ITEM[key])}</Typography>
+            </MenuItem>
+        )
+    }
+
+    // show menu item icon
+    function getItemIcon(key) {
+        switch (key) {
+            case 1:
+                return <SettingsEthernetIcon fontSize="small" />
+            case 2:
+                return <GroupIcon fontSize="small" />
+            case 3:
+                return <TransferWithinAStationIcon fontSize="small" />
+            case 4:
+                return <SendIcon fontSize="small" />
+            case 0:
+            default:
+                return null
+        }
+    }
+
+    // show correct ui according to selectIndex
+    function showTransactions() {
+        switch (selectIndex) {
+            case 1:
+                return showTransferEth()
+            case 2:
+                return showOwnerAdmin()
+            case 3:
+                return showCustomWork()
+            case 4:
+                return show20TokenTransfer()
+            case 0:
+            default:
+                return null
+        }
+    }
+
+    //render
     return (<>
         <Card>
             <CardHeader color="primary">
@@ -654,20 +973,48 @@ function DaoDetail({history}) {
                 {hasDao && showDaoInfos()}
             </CardBody>
         </Card>
-        {showDiaglog()}
+        {showReplaceOwnerDiaglog()}
+        {isOwner &&
+            <Card>
+                <CardHeader color="primary">
+                     <h4 className={classes.cardTitleWhite}>{t("common_transactions")}</h4>
+                     <div className={classes.cardCategoryWhiteOther}>
+                         <div>
+                             {t('eth_amount') + ": " + utils.formatEther(balance) + " ETH"}
+                         </div>
+                         <Button
+                              className = {classes.menuBtn}
+                              ref={anchorRef}
+                              aria-controls={menu_open ? 'menu-list-grow' : undefined}
+                              aria-haspopup="true"
+                              onClick={handleToggle}
+                            >
+                              {t(SELECT_ITEM[selectIndex])}<DownIcon />
+                           </Button>
+                     </div>
 
-        {isOwner && <>
-            {showOwnerAdmin()}
-            {showTransferEth()}
-            {showCustomWork()}
-
-        </>
-             }
-
-
-            {/* <Suspense fallback={<div>Loading...</div>}>
-
-                    </Suspense> */}
+                    <Popper open={menu_open} anchorEl={anchorRef.current} role={undefined} transition disablePortal>
+                      {({ TransitionProps, placement }) => (
+                        <Grow
+                          {...TransitionProps}
+                          style={{ transformOrigin: placement === 'bottom' ? 'center top' : 'center bottom' }}
+                        >
+                          <Paper>
+                            <ClickAwayListener onClickAway={handleCloseMenu}>
+                              <MenuList autofocusitem={"" +menu_open} id="menu-list-grow" onKeyDown={handleListKeyDown}>
+                                  {SELECT_ITEM.map((item,key)=> showMenuItem(key))}
+                              </MenuList>
+                            </ClickAwayListener>
+                          </Paper>
+                        </Grow>
+                      )}
+                    </Popper>
+                 </CardHeader>
+                 <CardBody>
+                     {showTransactions()}
+                 </CardBody>
+             </Card>
+        }
     </>)
 }
 

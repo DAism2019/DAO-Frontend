@@ -29,8 +29,8 @@ import AllDaos from "views/AllDaos/AllDaos.jsx"
 // import MyDapp from "views/MyDapp/MyDapp.jsx"
 // import AllSvg from "views/AllSvg/AllSvg.jsx"
 // import Guide from 'views/Guide/Guide.jsx'
-// import SearchDapp from 'views/SearchDapp/SearchDapp.jsx'
-// import RegisterDapp from 'views/RegisterDapp/RegisterDapp.jsx'
+import SearchDao from 'views/SearchDao/SearchDao.jsx'
+import RegisterDao from 'views/RegisterDao/RegisterDao.jsx'
 import DaoDetail from 'views/DaoDetail/DaoDetail.jsx'
 
 const dashboardRoutes = [
@@ -48,13 +48,13 @@ const dashboardRoutes = [
         component: DaoDetail,
         layout: "/"
     },
-    // {
-    //     path: "register",
-    //     name: "register_dapp",
-    //     icon: Unarchive,
-    //     component: RegisterDapp,
-    //     layout: "/"
-    // },
+    {
+        path: "register",
+        name: "register_dao",
+        icon: Unarchive,
+        component: RegisterDao,
+        layout: "/"
+    },
     // {
     //     path: "mine",
     //     name: "my_dapp",
@@ -62,13 +62,13 @@ const dashboardRoutes = [
     //     component: MyArticle,
     //     layout: "/"
     // },
-    // {
-    //     path: "search",
-    //     name: "query_dapp",
-    //     icon: Search,
-    //     component: SearchDapp,
-    //     layout: "/"
-    // },
+    {
+        path: "search",
+        name: "search_dao",
+        icon: Search,
+        component: SearchDao,
+        layout: "/"
+    },
     // {
     //     path: "guide",
     //     name: "guide",

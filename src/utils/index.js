@@ -1,7 +1,8 @@
-import {ethers} from 'ethers'
+import {ethers,utils} from 'ethers'
 import WALLET_ADMIN_ABI from 'constants/abis/WalletAdmin'
 import WALLET_INFOS_ABI from 'constants/abis/WalletInfos'
 import TEMPLATE_ONE_ABI from 'constants/abis/WalletTemplateOne'
+import ERC20_ABI from 'constants/abis/ERC20'
 import {WALLET_ADMIN_ADDRESS, WALLET_INFOS_ADDRESS} from '../constants'
 import UncheckedJsonRpcSigner from './signer'
 
@@ -140,6 +141,10 @@ export function getTemplateOneContract(address, library, account) {
     return getContract(address, TEMPLATE_ONE_ABI, library, account)
 }
 
+export function getERC20Contract(address,library,account) {
+    return getContract(address, ERC20_ABI, library, account)
+}
+
 export function getPathBase() {
     return process.env.NODE_ENV === 'production'
         ? process.env.REACT_APP_PATH_BASE
@@ -185,5 +190,28 @@ export function getIndexArrayReverse(amount, pagesize, offset) {
     for (let i = start; i >= end; i--) {
         result.push(i)
     }
+    return result
+}
+
+//将含有任意长度小数的字符串转换为适配token精度的BigNumber
+//注意，由于js精度问题，这里amount必须是字符串，不能为数字
+export function getIntBigNum(amount,decimals) {
+    let _str = "" + amount
+    let strs = _str.split('.')
+    let times = 0;
+     //has point
+    if(strs.length > 1) {
+        let _point = strs[1]
+        if(_point.length > decimals) {
+            _point = _point.substring(0,decimals)
+        }
+        times = _point.length
+        _str = strs[0] +  _point
+    }
+    let ten = utils.bigNumberify(10)
+    times = ten.pow(times)
+    let num_times = utils.bigNumberify(_str)
+    let base = ten.pow(decimals)
+    let result = base.mul(num_times).div(times)
     return result
 }
