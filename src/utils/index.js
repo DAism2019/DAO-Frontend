@@ -3,6 +3,7 @@ import WALLET_ADMIN_ABI from 'constants/abis/WalletAdmin'
 import WALLET_INFOS_ABI from 'constants/abis/WalletInfos'
 import TEMPLATE_ONE_ABI from 'constants/abis/WalletTemplateOne'
 import ERC20_ABI from 'constants/abis/ERC20'
+import WALLET_COMMON_ABI from 'constants/abis/WalletCommon'
 import {WALLET_ADMIN_ADDRESS, WALLET_INFOS_ADDRESS} from '../constants'
 import UncheckedJsonRpcSigner from './signer'
 
@@ -143,6 +144,10 @@ export function getTemplateOneContract(address, library, account) {
 
 export function getERC20Contract(address,library,account) {
     return getContract(address, ERC20_ABI, library, account)
+}
+
+export function getWalletCommonContract(address,library,account) {
+    return getContract(address, WALLET_COMMON_ABI, library, account)
 }
 
 export function getPathBase() {

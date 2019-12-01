@@ -132,9 +132,7 @@ function RegisterDao({history}) {
     const checkRegister = async () =>{
         const {name,owners,required} = registerInfo
         if(!name || !owners || !required) {
-            return showSnackbar(t('empty_input'),"error",()=>{
-                console.log("close")
-            })
+            return showSnackbar(t('empty_input'),"error")
         }
         let all_owners = owners.split(',')
         let all_owner_count = {}
@@ -216,7 +214,7 @@ function RegisterDao({history}) {
                 dao_register.removeAllListeners('createWalletSuc')
             }
         }
-    },[dao_register,account,showSnackbar,t])
+    },[dao_register,account,showSnackbar,t,history])
 
     let canRegister = dao_register && account
     let tip = fee === -1 ? t("getting") : (utils.formatEther(fee) + " ETH")

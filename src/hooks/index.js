@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useWeb3Context } from 'web3-react'
-import { getWalletAdminContract,getWalletInfosContract,getTemplateOneContract,getContract } from '../utils'
-import ERC20_ABI from 'constants/abis/ERC20'
+import { getWalletAdminContract,getWalletInfosContract,getTemplateOneContract,getWalletCommonContract,getERC20Contract } from '../utils'
+// import ERC20_ABI from 'constants/abis/ERC20'
 // modified from https://usehooks.com/useDebounce/
 export function useDebounce(value, delay) {
   const [debouncedValue, setDebouncedValue] = useState(value)
@@ -89,9 +89,21 @@ export function useTokenContract(tokenAddress, withSignerIfPossible = true) {
 
   return useMemo(() => {
     try {
-      return getContract(tokenAddress, ERC20_ABI, library, withSignerIfPossible ? account : undefined)
+      return getERC20Contract(tokenAddress, library, withSignerIfPossible ? account : undefined)
     } catch {
       return null
     }
   }, [tokenAddress, library, withSignerIfPossible, account])
+}
+
+export function useWalletCommonContract(wallet_address, withSignerIfPossible = true) {
+  const { library, account } = useWeb3Context()
+
+  return useMemo(() => {
+    try {
+      return getWalletCommonContract(wallet_address, library, withSignerIfPossible ? account : undefined)
+    } catch {
+      return null
+    }
+  }, [wallet_address, library, withSignerIfPossible, account])
 }
