@@ -22,7 +22,7 @@ export default function Provider({children}) {
             show:false,
             pos:'left',
             message:'',
-            type:'',
+            type:'success',
             closeNotification:null
         })
     }

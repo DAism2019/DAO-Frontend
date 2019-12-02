@@ -33,13 +33,12 @@ import { withRouter } from 'react-router'
 import { useSnackbarContext } from 'contexts/SnackBarProvider.jsx';
 import { useWalletInfosContract,} from 'hooks';
 import { isMobile } from 'react-device-detect'
-import { ethers,constants } from 'ethers'
+import { constants } from 'ethers'
 import { useTranslation } from 'react-i18next'
-import { isAddress,getIndexArray,convertTimetoTimeString,NETWORK_NAME } from 'utils'
-import { reactLocalStorage } from 'reactjs-localstorage'
+import { isAddress,getIndexArray,convertTimetoTimeString } from 'utils'
+// import { reactLocalStorage } from 'reactjs-localstorage'
 
 const PAGE_SIZE = 10;
-
 
 const useStyles = makeStyles(theme => ({
     cardCategoryWhite: {
@@ -128,7 +127,7 @@ function SerachDao({history}) {
     const queryByName = () => {
         let name = queryValues["daoname_query"];
         if(!name){
-            return showSnackbar(t('null_query'),'error')
+            return showSnackbar(t('empty_input'),'error')
         }
         if(dao_info) {
             dao_info.getWalletInfoByName(name).catch(err => {}).then(infos =>{
@@ -136,7 +135,7 @@ function SerachDao({history}) {
                     if(infos[1] === constants.AddressZero) {
                         return showSnackbar(t('no_dao'),'info')
                     }else {
-                        history.push("/full#" + infos[0]);
+                        history.push("/admin#" + infos[0]);
                     }
                 }
             })
@@ -154,7 +153,7 @@ function SerachDao({history}) {
                     if(infos[0] === constants.AddressZero) {
                         return showSnackbar(t('no_dao'),'info')
                     }else {
-                        history.push("/full#" + address);
+                        history.push("/admin#" + address);
                     }
                 }
             })
@@ -175,7 +174,7 @@ function SerachDao({history}) {
                 }else if (len === 1 ){
                     let dao_address = await dao_info.userWallets(address,0);
                     if(inPanel) {
-                        history.push("/full#" + dao_address);
+                        history.push("/admin#" + dao_address);
                     }
                 }else {
                     setOffset(0)

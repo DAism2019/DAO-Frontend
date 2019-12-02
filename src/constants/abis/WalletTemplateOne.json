@@ -266,6 +266,11 @@
       "inputs": [
         {
           "indexed": true,
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": true,
           "name": "transactionId",
           "type": "uint256"
         }
@@ -278,6 +283,11 @@
       "inputs": [
         {
           "indexed": true,
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": true,
           "name": "transactionId",
           "type": "uint256"
         }
@@ -288,6 +298,11 @@
     {
       "anonymous": false,
       "inputs": [
+        {
+          "indexed": true,
+          "name": "sender",
+          "type": "address"
+        },
         {
           "indexed": true,
           "name": "transactionId",
@@ -492,7 +507,12 @@
         }
       ],
       "name": "executeTransaction",
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"

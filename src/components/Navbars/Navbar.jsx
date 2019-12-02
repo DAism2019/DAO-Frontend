@@ -31,7 +31,7 @@ import AdminNavbarLinks from "./AdminNavbarLinks.jsx";
 import RTLNavbarLinks from "./RTLNavbarLinks.jsx";
 import Button from "components/CustomButtons/Button.jsx";
 import { useTranslation } from 'react-i18next'
-import {isMobile} from 'react-device-detect'
+// import {isMobile} from 'react-device-detect'
 
 import headerStyle from "assets/jss/material-dashboard-react/components/headerStyle.jsx";
 
@@ -45,11 +45,12 @@ function Header({ ...props }) {
       }
       return null;
     });
-    if(isMobile){
-        return t(name) ;
-    }else{
-        return t(name) + " - " + t("dmn");
-    }
+    return t(name) ;
+    // if(isMobile){
+    //     return t(name) ;
+    // }else{
+    //     return t(name) + " - " + t("dmn");
+    // }
 
   }
   const { classes, color } = props;
@@ -64,9 +65,9 @@ function Header({ ...props }) {
           <Button color="transparent" href="#" className={classes.title}>
             {makeBrand()}
           </Button>
-          {isMobile &&  <div style={{marginLeft:"30px"}}>
+          {/* {isMobile &&  <div style={{marginLeft:"30px"}}>
                {t("dmn")}
-           </div>}
+           </div>} */}
         </div>
         <Hidden smDown implementation="css">
           {props.rtlActive ? <RTLNavbarLinks /> : <AdminNavbarLinks />}

@@ -125,6 +125,7 @@ function DaoDetail({history}) {
                         createTime = convertTimetoTimeString(createTime)
                         let name = infos[1]
                         if(!stale){
+                            setTip("")
                             setdaoInfo({
                                 "address":_hash,
                                 creator,
@@ -206,9 +207,9 @@ function DaoDetail({history}) {
     function showDaoDetail() {
         switch (daoInfo.templateIndex) {
             case 0:
-                return <TemplateOne address = {daoInfo.address} />
+                return <TemplateOne template_address = {daoInfo.address} />
             default:
-                return <TemplateOne  contract = {daoInfo.address}/>
+                return <TemplateOne  template_address = {daoInfo.address}/>
         }
     }
 

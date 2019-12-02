@@ -61,22 +61,25 @@ import {useSnackbarContext} from 'contexts/SnackBarProvider.jsx';
 import {useTemplateOneContract} from 'hooks';
 import {getIndexArray,getEtherBalance,getIntBigNum,shortenAddress,
     calculateGasMargin,isAddress,getERC20Contract} from 'utils'
+import TEMPLATE_ONE_ABI from 'constants/abis/WalletTemplateOne'
 
 //other libraries
 import styled from 'styled-components'
 import { utils,constants } from 'ethers'
-import * as txDecoder from 'ethereum-tx-decoder';
+// import * as txDecoder from 'ethereum-tx-decoder';
+import {FunctionDecoder} from 'ethereum-tx-decoder';
 
 const GAS_MARGIN = utils.bigNumberify(1000);
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 6;
 const SELECT_ITEM = [
     'select_transction',
     'transfer_eth_admin',
     'owner_admin',
     'custom_transaction',
     'transfer_20_token',
-    "change_required",
-    "confirm_transcaction",
+    "changeRequirement",
+    "confirm_transaction",
+    "executed_list"
 ]
 
 const ALL_ITEM_UI = [
@@ -86,7 +89,8 @@ const ALL_ITEM_UI = [
     <TransferWithinAStationIcon fontSize="small" />,
     <SendIcon fontSize="small" />,
     <CompareArrowsIcon fontSize="small" />,
-    <HourglassEmptyIcon fontSize="small" />
+    <HourglassEmptyIcon fontSize="small" />,
+    <AcUnitIcon fontSize="small" />
 ]
 
 const ContentWrapperTwo = styled.p`
@@ -188,12 +192,12 @@ const handle_change_state_init = {
     token_contract:null
 }
 
-function TemplateOne({address}) {
+function TemplateOne({template_address}) {
     const classes = useStyles()
     const {t} = useTranslation()
     const showSnackbar= useSnackbarContext()
     const {library,account} = useWeb3Context()
-    const daoContract = useTemplateOneContract(address)
+    const daoContract = useTemplateOneContract(template_address)
     const [owners,setOwners] = useState([])
     const [open, setOpen] = useState(false);
     const [state,setState] = useState(handle_change_state_init)
@@ -203,11 +207,14 @@ function TemplateOne({address}) {
     const [selectIndex,setSelectIndex] = useState(0)
     const [required,setRequired] = useState('')
     const [offset,setOffset] = useState(0)
-    const [pendingTable,setPendingTable] = useState([])
+    const [offsetTwo,setOffsetTwo] = useState(0)
+    const [pendingData,setPendingData] = useState([])
     const [pendingIds,setPendingIds] = useState([])
-    const [pending_ids_str,set_pending_ids_str] = useState('')
-
-    const in_pending = SELECT_ITEM[selectIndex] === 'confirm_transcaction'
+    const [executedIds,setExecutedIds] = useState([])
+    const [execluteData,setExecutedData]= useState([])
+    const fnDecoder = new FunctionDecoder(TEMPLATE_ONE_ABI)
+    const in_pending = SELECT_ITEM[selectIndex] === 'confirm_transaction'
+    const in_executed = SELECT_ITEM[selectIndex] === 'executed_list'
 
     const handleClickOpen = () => {
       setOpen(true);
@@ -235,7 +242,7 @@ function TemplateOne({address}) {
       }
       setState(handle_change_state_init)
       setOffset(0)
-      setPendingTable([])
+      setPendingData([])
       setSelectIndex(value)
       setMenu_Open(false);
     }
@@ -276,15 +283,15 @@ function TemplateOne({address}) {
     };
 
     const transferErc20Token = () => {
-        let {token_contract,token_decimals,recipient,call_value} = state
+        let {token_contract,token_decimals,recipient,transferValue} = state
         if(!recipient || !isAddress(recipient)) {
             return showSnackbar(t("invalid_address"),"error")
         }
-        let amount = + call_value;
+        let amount = + transferValue;
         if(Number.isNaN(amount) || amount <= 0) {
             return showSnackbar(t("invalid_number"),"error")
         }
-        let result_bigNumber = getIntBigNum(call_value,+token_decimals)
+        let result_bigNumber = getIntBigNum(transferValue, + token_decimals)
 
         if(token_contract) {
             let func = token_contract.interface.functions.transfer;
@@ -292,7 +299,6 @@ function TemplateOne({address}) {
             let data = func.encode(args)
             submit_transaction(data,token_contract.address)
         }
-
     }
 
     const submitCustomWork = () => {
@@ -352,7 +358,7 @@ function TemplateOne({address}) {
         const {newOwner} = state
         event.preventDefault()
         if(!newOwner){
-            return showSnackbar(t("null_input"),'error');
+            return showSnackbar(t("empty_input"),'error');
         }else if (!isAddress(newOwner)) {
             return showSnackbar(t("invalid_address"),'error');
         }else {
@@ -403,26 +409,197 @@ function TemplateOne({address}) {
         submit_transaction(data)
     };
 
+    const _executeInnerTransactionCall = async (method_name,trans_id) => {
+        let estimate = daoContract.estimate[method_name]
+        let method = daoContract[method_name]
+        let args = [trans_id]
+        let value = constants.Zero
+        const estimatedGasLimit = await estimate(...args, { value })
+        method(...args, {
+            value,
+            gasPrice:utils.parseUnits('10.0','gwei'),
+            gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) })
+        .then(response => {
+            showSnackbar(t('transaction_send_success'),'success')
+        })
+    };
+
+    const onExecuteTransaction = trans_id => () => _executeInnerTransactionCall('executeTransaction',trans_id)
+    const onRevokeTransaction = trans_id => () => _executeInnerTransactionCall('revokeConfirmation',trans_id)
+    const onConfirmTransaction = trans_id => () => _executeInnerTransactionCall('confirmTransaction',trans_id)
     //show menu
     const prevOpen = useRef(menu_open);
+
     useEffect(() => {
         if (prevOpen.current === true && menu_open === false) {
           anchorRef.current.focus();
         }
-
         prevOpen.current = menu_open;
     }, [menu_open]);
 
-    useEffect(() => {
-        if(pending_ids_str && daoContract ) {
-            let stale = false;
-            let ids = pending_ids_str.split(',')
-            function getPendingData(ids) {
+
+    //set listeners
+    useEffect(()=>{
+        if(daoContract && account) {
+            let stale = false
+            function getAllOwners() {
+                daoContract.getAllOwners().then( owners =>{
+                    if(!stale){
+                        setOwners(owners)
+                    }
+                }).catch(()=>{})
+            }
+
+            function getBalance() {
+                getEtherBalance(daoContract.address,library).then( balance => {
+                    if(!stale) {
+                        setBalance(balance)
+                    }
+                }).catch(()=>{})
+            }
+            getBalance()
+
+            daoContract.required().then(_required => {
+                if(!stale) {
+                    setRequired(+_required)
+                }
+            }).catch(()=>{})
+
+            daoContract.on('Deposit',(sender,value,event)=>{
+                getBalance()
+            })
+
+            daoContract.on('OwnerAddition',(owner,event)=>{
+                getAllOwners()
+            })
+
+            daoContract.on('OwnerRemoval',(owner,event)=>{
+                getAllOwners()
+            })
+            daoContract.on('RequirementChange',(_required,event)=>{
+                setRequired(+ _required)
+            })
+            getAllOwners()
+
+            let filter1 = daoContract.filters.Submission(account)
+            let filter2 = daoContract.filters.ExecutionFailure(account)
+            daoContract.on(filter1, (owner,trans_id,event) => {
+                return showSnackbar(t('submission_suc'),"success")
+            })
+            daoContract.on(filter2, (owner,trans_id,event) => {
+                return showSnackbar(t('ExecutionFailure'),"error")
+            })
+
+            async function getAllIds() {
+                let count = await daoContract.transactionCount()
+                if(count > 0) {
+                    let pending_ids = await daoContract.getTransactionIds(0,count,true,false)
+                    let executed_ids = await daoContract.getTransactionIds(0,count,false,true)
+                    if(!stale){
+                        setPendingIds(pending_ids)
+                        setExecutedIds(executed_ids)
+                    }
+                }
+
+            };
+            getAllIds()
+            daoContract.on('Confirmation', (owner,trans_id,event) => {
+                getAllIds()
+                if(owner === account) {
+                    showSnackbar(t('confirm_suc'),"success")
+                }
+            })
+            daoContract.on('Revocation', (owner,trans_id,event) => {
+                getAllIds()
+                if(owner === account) {
+                    showSnackbar(t('revocate_suc'),"success")
+                }
+            })
+            daoContract.on('Execution', (owner,trans_id,event) => {
+                getAllIds()
+                if(owner === account) {
+                    showSnackbar(t('execute_suc'),"success")
+                }
+            })
+
+            return () => {
+                stale = true
+                daoContract.removeAllListeners('Submission')
+                daoContract.removeAllListeners('Execution')
+                daoContract.removeAllListeners('Confirmation')
+                daoContract.removeAllListeners('Revocation')
+                daoContract.removeAllListeners('ExecutionFailure')
+                daoContract.removeAllListeners('OwnerAddition')
+                daoContract.removeAllListeners('OwnerRemoval')
+                daoContract.removeAllListeners('RequirementChange')
+            }
+        }
+    },[daoContract,library,account,showSnackbar,t])
+
+    //refresh executed data
+    useEffect(()=> {
+        if(in_executed && daoContract ) {
+            let stale = false
+            let query_index_array = getIndexArray(executedIds.length,PAGE_SIZE,offsetTwo)
+            let executed_ids_array = []
+            for(let i=0;i<query_index_array.length;i++) {
+                let _index = query_index_array[i]
+                let _id = executedIds[_index]
+                executed_ids_array.push(_id)
+            }
+
+            function getExecutedDataByIds(ids) {
                 let allPromise = []
                 let allPromiseOne = []
                 let allPromiseTwo = []
                 for(let i=0;i<ids.length;i++) {
-                    let trans_id = + ids[i]
+                    let trans_id = ids[i]
+                    allPromiseOne.push(daoContract.transactions(trans_id).catch(() => {}))
+                    allPromiseTwo.push(daoContract.getConfirmations(trans_id).catch(()=>{}))
+                }
+                allPromise.push(Promise.all(allPromiseOne),Promise.all(allPromiseTwo))
+                Promise.all(allPromise).catch(()=>{}).then(allResult =>{
+                    let results_one = allResult[0]
+                    let results_two= allResult[1]
+                    let executed_data = []
+                    for(let j =0;j<results_one.length;j++) {
+                        let infos = results_one[j]
+                        let confirm_addresses = results_two[j]
+                        executed_data.push([
+                            infos,confirm_addresses,ids[j]
+                        ])
+                    }
+                    if(!stale && in_executed) {
+                        setExecutedData(executed_data)
+                    }
+                })
+            }
+            getExecutedDataByIds(executed_ids_array)
+
+            return () => {
+                stale = true
+            }
+        }
+    },[in_executed,daoContract,executedIds,offsetTwo])
+
+    //refresh pending_data
+    useEffect(() => {
+        if(in_pending && daoContract ) {
+            let stale = false;
+            let query_index_array = getIndexArray(pendingIds.length,PAGE_SIZE,offset)
+            let pending_ids_array = []
+            for(let i=0;i<query_index_array.length;i++) {
+                let _index = query_index_array[i]
+                let _id = pendingIds[_index]
+                pending_ids_array.push(_id)
+            }
+            //refresh pending_data
+            function getPendingDataByIds(ids) {
+                let allPromise = []
+                let allPromiseOne = []
+                let allPromiseTwo = []
+                for(let i=0;i<ids.length;i++) {
+                    let trans_id = ids[i]
                     allPromiseOne.push(daoContract.transactions(trans_id).catch(() => {}))
                     allPromiseTwo.push(daoContract.getConfirmations(trans_id).catch(()=>{}))
                 }
@@ -435,63 +612,21 @@ function TemplateOne({address}) {
                         let infos = results_one[j]
                         let confirm_addresses = results_two[j]
                         pending_data.push([
-                            infos,confirm_addresses
+                            infos,confirm_addresses,ids[j]
                         ])
                     }
                     if(!stale && in_pending) {
-                        setPendingTable(pending_data)
+                        setPendingData(pending_data)
                     }
                 })
             }
-            getPendingData(ids)
+            getPendingDataByIds(pending_ids_array)
 
             return () => {
                 stale = true
             }
         }
-    },[daoContract,in_pending,pending_ids_str])
-
-
-    //refresh owner
-    useEffect(()=>{
-        if(daoContract) {
-            let stale = false;
-            function getAllOwners() {
-                daoContract.getAllOwners().then( owners =>{
-                    if(!stale){
-                        setOwners(owners)
-                    }
-                }).catch(()=>{})
-            }
-            getEtherBalance(daoContract.address,library).then( balance => {
-                if(!stale) {
-                    setBalance(balance)
-                }
-            }).catch(()=>{})
-            daoContract.required().then(_required => {
-                if(!stale) {
-                    setRequired(+_required)
-                }
-            }).catch(()=>{})
-            daoContract.on('OwnerAddition',(owner,event)=>{
-                getAllOwners()
-            })
-            daoContract.on('OwnerRemoval',(owner,event)=>{
-                getAllOwners()
-            })
-            daoContract.on('RequirementChange',(_required,event)=>{
-                setRequired(+ _required)
-            })
-            getAllOwners()
-
-            return ()=>{
-                stale = true
-                daoContract.removeAllListeners('OwnerAddition')
-                daoContract.removeAllListeners('OwnerRemoval')
-                daoContract.removeAllListeners('RequirementChange')
-            }
-        }
-    },[daoContract,library])
+    },[daoContract,in_pending,pendingIds,offset])
 
     //refresh token_20_info
     useEffect(()=>{
@@ -538,38 +673,6 @@ function TemplateOne({address}) {
             }
         }
     },[state.token_20_address,showSnackbar,t,daoContract,account,library])
-
-    //refresh pending ids_array
-    useEffect(() => {
-        if(daoContract && in_pending) {
-            let stale = false;
-            if(pendingIds.length === 0) {
-                async function getPendingIds() {
-                    let count = await daoContract.transactionCount()
-                    let ids = await daoContract.getTransactionIds(0,count,true,false)
-                    if(!stale){
-                        setPendingIds(ids)
-                    }
-                }
-                getPendingIds()
-            } else {
-                let query_index = getIndexArray(pendingIds.length,PAGE_SIZE,offset)
-                let pending_ids_page = []
-                for(let i=0;i<query_index.length;i++) {
-                    let _index = query_index[i]
-                    let _id = pendingIds[_index].toString()
-                    pending_ids_page.push(_id)
-                }
-                let pending_ids_str = pending_ids_page.join(',')
-                set_pending_ids_str(pending_ids_str)
-           }
-
-           return () => {
-               stale = true
-           }
-        }
-    },[in_pending,daoContract,pendingIds,offset])
-
 
     //show erc20 token transfer ui
     function show20TokenTransfer() {
@@ -654,7 +757,7 @@ function TemplateOne({address}) {
                                "aria-label": "SetLabel"
                            },
                            value:transferValue,
-                           onChange: handleChange("call_value")
+                           onChange: handleChange("transferValue")
                        }}/>
                        <span>
                            {token_symbol}
@@ -876,7 +979,7 @@ function TemplateOne({address}) {
            <>
                <div className={classes.typo}>
                   <div className={classes.note}>
-                          {t("add_owner") + ":"}
+                          {t("addOwner") + ":"}
                   </div>
                   <CustomInput formControlProps={{
                           className: classes.addressTxt
@@ -905,7 +1008,7 @@ function TemplateOne({address}) {
             showAddress = shortenAddress(showAddress)
         return (
             <Dialog open={open} onClose={handleClose} aria-labelledby="form-dialog-title">
-                <DialogTitle id="form-dialog-title">{t("replace_owner")}</DialogTitle>
+                <DialogTitle id="form-dialog-title">{t("replaceOwner")}</DialogTitle>
                 <DialogContent>
                   <DialogContentText>
                     {t("replace_address").replace("{address}",showAddress)}
@@ -948,6 +1051,221 @@ function TemplateOne({address}) {
         )
     }
 
+    function showPendingTransactions() {
+        return (
+            <div>
+                {pendingData.map((data,key) => showOnePendingTransaction(data,key))}
+                <div className = {classes.buttonWrapper}>
+                    <Pagination
+                     limit={PAGE_SIZE}
+                     offset={offset}
+                     total={pendingIds.length}
+                     size ='large'
+                     onClick={(e,_offset) => {
+                          if(_offset === offset)
+                              return;
+                          setOffset(_offset)
+                     }}
+                   />
+                </div>
+
+            </div>
+        )
+
+    }
+
+    function showExecutedTransactions() {
+        return (
+            <div>
+                {execluteData.map((data,key) => showOneExecutedTransaction(data,key))}
+                <div className = {classes.buttonWrapper}>
+                    <Pagination
+                     limit={PAGE_SIZE}
+                     offset={offsetTwo}
+                     total={execluteData.length}
+                     size ='large'
+                     onClick={(e,_offset) => {
+                          if(_offset === offsetTwo)
+                              return;
+                          setOffsetTwo(_offset)
+                     }}
+                   />
+                </div>
+
+            </div>
+        )
+    }
+
+    function showCallParams(params) {
+        let name = params.signature.split('(')[0]
+        switch (name) {
+            case 'replaceOwner':
+                return showReplaceOwnerParams(params,name)
+            case 'changeRequirement':
+                return showChangeRequiredParams(params,name)
+            default:
+                return showOneOwnerAdminParams(params,name)
+
+        }
+    }
+
+    function showOneOwnerAdminParams(params,name) {
+        return (<>
+            <ContentWrapperTwo>
+                   {t('work_name') + ": " + t(name) }
+            </ContentWrapperTwo>
+            <ContentWrapperTwo>
+                   {t('param_address') + ": " + params[0]}
+            </ContentWrapperTwo>
+        </>)
+    }
+
+    function showChangeRequiredParams(params,name) {
+        return (
+            <>
+                <ContentWrapperTwo>
+                       {t('work_name') + ": " + t(name) }
+                </ContentWrapperTwo>
+                <ContentWrapperTwo>
+                       {t('new_required') + ": " + params[0].toString()}
+                </ContentWrapperTwo>
+            </>
+        )
+    }
+
+    function showReplaceOwnerParams(params,name) {
+        return (
+            <>
+                <ContentWrapperTwo>
+                       {t('work_name') + ": " + t(name) }
+                </ContentWrapperTwo>
+                {isMobile ? <>
+                        <ContentWrapperTwo>
+                               {t('old_owner') + ": " }
+                        </ContentWrapperTwo>
+                        <ContentWrapperTwo>
+                               { params[0] }
+                        </ContentWrapperTwo>
+                        <ContentWrapperTwo>
+                               {t('new_owner') + ": " }
+                        </ContentWrapperTwo>
+                        <ContentWrapperTwo>
+                               { params[1] }
+                        </ContentWrapperTwo>
+                    </>
+                    :
+                    <>
+                        <ContentWrapperTwo>
+                               {t('old_owner') + ": " + params[0]}
+                        </ContentWrapperTwo>
+                        <ContentWrapperTwo>
+                               {t('new_owner') + ": " + params[1]}
+                        </ContentWrapperTwo>
+                    </>
+                }
+            </>
+        )
+    }
+
+    function showCallTypes(params) {
+        const str = params ? (params.length > 0 ? t('internal_call') : t('external_call')) : t('transferEth')
+        return (
+            <div>
+                <ContentWrapperTwo>
+                       {t('method_call_type') + ": " + str }
+                </ContentWrapperTwo>
+                {params && params.length > 0 && showCallParams(params)}
+            </div>
+        )
+    }
+
+    function showOneExecutedTransaction(row_data,key) {
+        const [{destination,value,data,executed},confirmOwners,] = row_data
+        const isSelf = destination.toLowerCase() === template_address.toLowerCase()
+        const params = isSelf ? fnDecoder.decodeFn(data) :  data.length===2 ? null : []
+
+        return (
+            <div key = {key}>
+                {isMobile ? <>
+                    <ContentWrapperTwo>
+                      {t('destination') + ":"}
+                    </ContentWrapperTwo>
+                    <ContentWrapperTwo>
+                      {destination}
+                    </ContentWrapperTwo>
+                </>
+                :  <ContentWrapperTwo>
+                       {t('destination') + ": " + destination}
+                   </ContentWrapperTwo>
+                }
+                {showCallTypes(params)}
+                <ContentWrapperTwo>
+                       {t('call_value') + ": " + utils.formatEther(value)}
+                </ContentWrapperTwo>
+                <ContentWrapperTwo>
+                       {t('confirm_amount') + ": " + confirmOwners.length}
+                </ContentWrapperTwo>
+                <ContentWrapperTwo>
+                       {t('executed') + ": " + executed}
+                </ContentWrapperTwo>
+                { key !== execluteData.length && <Divider variant="fullWidth" style={{marginBottom:"20px"}}/> }
+           </div>
+       )
+    }
+
+    function showOnePendingTransaction(row_data,key) {
+        const [{destination,value,data,executed},confirmOwners,trans_id] = row_data
+        const isSelf = destination.toLowerCase() === template_address.toLowerCase()
+        // const params = isSelf ? fnDecoder.decodeFn(data) : []
+        const params = isSelf ? fnDecoder.decodeFn(data) : data.length===2 ? null : []
+        const hasSelf = confirmOwners.indexOf(account) !== -1
+        const canExecute = required <= confirmOwners.length
+        const canConfrim = (required > confirmOwners.length) &&  !hasSelf
+        return (
+            <div key = {key}>
+                {isMobile ? <>
+                    <ContentWrapperTwo>
+                      {t('destination') + ":"}
+                    </ContentWrapperTwo>
+                    <ContentWrapperTwo>
+                      {destination}
+                    </ContentWrapperTwo>
+                </>
+                :  <ContentWrapperTwo>
+                       {t('destination') + ": " + destination}
+                   </ContentWrapperTwo>
+                }
+                {showCallTypes(params)}
+                <ContentWrapperTwo>
+                       {t('call_value') + ": " + utils.formatEther(value)}
+                </ContentWrapperTwo>
+                <ContentWrapperTwo>
+                       {t('confirm_amount') + ": " + confirmOwners.length}
+                </ContentWrapperTwo>
+                <ContentWrapperTwo>
+                       {t('executed') + ": " + executed}
+                </ContentWrapperTwo>
+                {hasSelf && <div className={classes.buttonWrapper}>
+                    {canExecute &&
+                        <Button variant="contained" onClick={onExecuteTransaction(trans_id)} className={classes.transferButton}>
+                            {t("execute")}
+                        </Button>}
+                    <Button variant="contained" onClick={onRevokeTransaction(trans_id)} className={classes.transferButton}>
+                        {t("revoke")}
+                    </Button>
+
+                </div>}
+                {canConfrim && <div className={classes.buttonWrapper}>
+                        <Button variant="contained" onClick={onConfirmTransaction(trans_id)} className={classes.transferButton}>
+                            {t("confirm")}
+                        </Button>
+                    </div>
+                }
+                { key !== pendingData.length && <Divider variant="fullWidth" style={{marginBottom:"20px"}}/> }
+           </div>
+        )
+    }
+
     // show correct ui according to selectIndex
     function showTransactions() {
         switch (selectIndex) {
@@ -961,11 +1279,16 @@ function TemplateOne({address}) {
                 return show20TokenTransfer()
             case 5:
                 return showChangeRequired()
+            case 6:
+                return showPendingTransactions()
+            case 7:
+                return showExecutedTransactions()
             case 0:
             default:
                 return null
         }
     }
+
 
     return (
         <Card>

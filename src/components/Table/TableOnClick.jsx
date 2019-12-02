@@ -24,10 +24,10 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
-import Button from '@material-ui/core/Button';
+// import Button from '@material-ui/core/Button';
 // import { Link } from 'react-router-dom';
 import { isMobile } from 'react-device-detect'
-import { getPathBase,shortenAddress } from 'utils'
+import { shortenAddress } from 'utils'
 import { Link } from 'react-router-dom';
 // core components
 import tableStyle from "assets/jss/material-dashboard-react/components/tableStyle.jsx";
@@ -36,7 +36,7 @@ const FONT_SIZE  = isMobile ? 13 : 20;
 
 function CustomTable({ ...props }) {
   const { classes, tableHead, tableData, tableHeaderColor } = props;
-  const {origin} = window.location
+  // const {origin} = window.location
   // const pre_url = origin + getPathBase() + '/full#';
 
   // const handleClick = id => event =>{
@@ -77,7 +77,7 @@ function CustomTable({ ...props }) {
                     {prop.map((_prop, key) => {
                       return (
                         <TableCell className={classes.tableCell} key={key} style={{fontSize:FONT_SIZE}}>
-                            {key ===1 ? <Link to={"/full#" + prop[1]} > { isMobile ? shortenAddress(_prop) : _prop} </Link> :_prop}
+                            {key ===1 ? <Link to={"/admin#" + prop[1]} > { isMobile ? shortenAddress(_prop) : _prop} </Link> :_prop}
                         </TableCell>
                       );
                     })}

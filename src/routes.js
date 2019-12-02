@@ -14,24 +14,22 @@
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. */
 // @material-ui/icons
-import Dashboard from "@material-ui/icons/Dashboard"
+// import Dashboard from "@material-ui/icons/Dashboard"
 import Unarchive from "@material-ui/icons/Unarchive";
-import LibraryBooks from "@material-ui/icons/LibraryBooks";
-import BubbleChart from "@material-ui/icons/BubbleChart";
+// import LibraryBooks from "@material-ui/icons/LibraryBooks";
+// import BubbleChart from "@material-ui/icons/BubbleChart";
 import Search from "@material-ui/icons/Search";
-import HowToReg from "@material-ui/icons/HowToReg";
+// import HowToReg from "@material-ui/icons/HowToReg";
 import AppsIcon from '@material-ui/icons/Apps';
 import FormatAlignJustifyIcon from '@material-ui/icons/FormatAlignJustify';
-import EditorIcon from '@material-ui/icons/Edit';
+// import EditorIcon from '@material-ui/icons/Edit';
 // custom views
 import AllDaos from "views/AllDaos/AllDaos.jsx"
-// import ArticleUpload from "views/ArticleUpload/ArticleUpload.jsx"
-// import MyDapp from "views/MyDapp/MyDapp.jsx"
-// import AllSvg from "views/AllSvg/AllSvg.jsx"
+
 // import Guide from 'views/Guide/Guide.jsx'
 import SearchDao from 'views/SearchDao/SearchDao.jsx'
 import RegisterDao from 'views/RegisterDao/RegisterDao.jsx'
-import DaoDetail from 'views/DaoDetail/DaoDetail.jsx'
+import DaoAdmin from 'views/DaoAdmin/DaoAdmin.jsx'
 
 const dashboardRoutes = [
     {
@@ -42,10 +40,10 @@ const dashboardRoutes = [
         layout: "/"
     },
     {
-        path: "full",
-        name: "full_dao",
+        path: "admin",
+        name: "dao_admin",
         icon: FormatAlignJustifyIcon,
-        component: DaoDetail,
+        component: DaoAdmin,
         layout: "/"
     },
     {

@@ -30,7 +30,7 @@ import { useWalletAdminContract,useWalletInfosContract } from 'hooks';
 import { isMobile } from 'react-device-detect'
 import { withRouter } from 'react-router'
 import {isAddress,calculateGasMargin} from 'utils'
-import { ethers,utils,constants } from 'ethers'
+import { utils } from 'ethers'
 
 const GAS_MARGIN = utils.bigNumberify(1000);
 
@@ -136,6 +136,7 @@ function RegisterDao({history}) {
         }
         let all_owners = owners.split(',')
         let all_owner_count = {}
+        // eslint-disable-next-line
         for( let owner of all_owners) {
             if(!isAddress(owner)){
                 return showSnackbar(t('invalid_address'),'error')
@@ -206,7 +207,7 @@ function RegisterDao({history}) {
             let filter = dao_register.filters.createWalletSuc(account)
             dao_register.on(filter,(creator,wallet,name,templateIndex,amount,event) => {
                 showSnackbar(t('register_dao_suc').replace("{name}",name),"success",()=>{
-                    history.push("/full#" + wallet);
+                    history.push("/admin#" + wallet);
                 })
             })
 
@@ -221,7 +222,7 @@ function RegisterDao({history}) {
     return (<>
         <Card>
             <CardHeader color="primary">
-                <h4 className={classes.cardTitleWhite}>{t("register_a_dao")}</h4>
+                <h4 className={classes.cardTitleWhite}>{t("register_dao")}</h4>
                 <p className={classes.cardCategoryWhite}>
                   {t('register_fee') + ": "  + tip}
                 </p>
@@ -256,7 +257,7 @@ function RegisterDao({history}) {
                                className:classes.addressTxt
                            }}
                            inputProps={{
-                               placeholder: t("input_init_owers"),
+                               placeholder: t("input_init_owners"),
                                inputProps: {
                                    "aria-label": "init_owners"
                                },
