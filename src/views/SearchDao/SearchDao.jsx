@@ -99,9 +99,9 @@ const useStyles = makeStyles(theme => ({
 }));
 
 let queryValuesInit = {
-    daoname_query:'',
-    daoaddress_query:'',
-    daocreator_query:''
+    dao_name_query:'',
+    dao_address_query:'',
+    dao_creator_query:''
 }
 
 function SerachDao({history}) {
@@ -125,7 +125,7 @@ function SerachDao({history}) {
 
     //query by name
     const queryByName = () => {
-        let name = queryValues["daoname_query"];
+        let name = queryValues["dao_name_query"];
         if(!name){
             return showSnackbar(t('empty_input'),'error')
         }
@@ -135,7 +135,11 @@ function SerachDao({history}) {
                     if(infos[1] === constants.AddressZero) {
                         return showSnackbar(t('no_dao'),'info')
                     }else {
-                        history.push("/admin#" + infos[0]);
+                        let [address,,name,,createTime] = infos
+                        createTime =  + (createTime.mul(1000))
+                        let data = [[name,address,convertTimetoTimeString(createTime)]]
+                        setAmount(1)
+                        setTableData(data)
                     }
                 }
             })
@@ -143,7 +147,7 @@ function SerachDao({history}) {
     }
 
     const queryByAddress = () => {
-        let address = queryValues["daoaddress_query"]
+        let address = queryValues["dao_address_query"]
         if(!address || !isAddress(address)){
             return showSnackbar(t('invalid_address'),'error')
         }
@@ -153,7 +157,11 @@ function SerachDao({history}) {
                     if(infos[0] === constants.AddressZero) {
                         return showSnackbar(t('no_dao'),'info')
                     }else {
-                        history.push("/admin#" + address);
+                        let [,name,,createTime] = infos
+                        createTime =  + (createTime.mul(1000))
+                        let data = [[name,address,convertTimetoTimeString(createTime)]]
+                        setAmount(1)
+                        setTableData(data)
                     }
                 }
             })
@@ -161,7 +169,7 @@ function SerachDao({history}) {
     }
 
     const queryByCreator = async () => {
-        let address = queryValues["daocreator_query"]
+        let address = queryValues["dao_creator_query"]
         if(!address || !isAddress(address)){
             return showSnackbar(t('invalid_address'),'error')
         }
@@ -173,8 +181,13 @@ function SerachDao({history}) {
                     return showSnackbar(t('no_dao'),'info')
                 }else if (len === 1 ){
                     let dao_address = await dao_info.userWallets(address,0);
+                    let infos = await dao_info.getWalletInfo(dao_address)
+                    let [,name,,createTime] = infos
+                    createTime =  + (createTime.mul(1000))
+                    let data = [[name,dao_address,convertTimetoTimeString(createTime)]]
                     if(inPanel) {
-                        history.push("/admin#" + dao_address);
+                        setAmount(1)
+                        setTableData(data)
                     }
                 }else {
                     setOffset(0)
@@ -191,20 +204,18 @@ function SerachDao({history}) {
 
     //refresh list
     useEffect(()=>{
-        if( dao_info && amount > 0 && creator ){
+        if( dao_info && amount > 1 && creator ){
             let stale = false
             async function getInfoByOffset(_offset){
                 let indexArray = getIndexArray(amount,PAGE_SIZE,_offset)
                 if(indexArray.length === 0)
                   return;
-                //根据索引得到相应的文章ID
                 let addressArray = []
                 for(let i=0;i<indexArray.length;i++){
                     let address = await dao_info.userWallets(creator,indexArray[i]);
                     addressArray.push(address);
                 }
                 let allPromise = []
-                 //根据文章ID获得文章简要信息
                  for(let i=0;i<addressArray.length;i++){
                      allPromise.push(dao_info.getWalletInfo(addressArray[i]).catch(() => {}))
                  }
@@ -226,6 +237,49 @@ function SerachDao({history}) {
             }
         }
     },[dao_info,amount,creator,offset])
+
+    const getQueryFuncByKey = (key) => {
+        switch (key) {
+            case "dao_name_query":
+                return queryByName
+            case "dao_address_query":
+                return queryByAddress
+            case "dao_creator_query":
+            default:
+                return queryByCreator
+        }
+    }
+
+    function showSearchUI() {
+        let keys = []
+        for(let key in queryValuesInit) {
+            keys.push(key)
+        }
+        return keys.map((key,index) =>
+            <div className={classes.typoTwo}>
+                <div className={classes.note} >
+                        {t(key)}
+                </div>
+                <div className={classes.searchWrapperLeft} >
+                    <CustomInput
+                        formControlProps={{
+                            className:classes.addressTxt
+                        }}
+                        inputProps={{
+                            placeholder: t("input" + key),
+                            inputProps: {
+                                "aria-label":key
+                            },
+                            onChange:handleChange(key)
+                        }}
+                     />
+                     <Button color="primary" aria-label="edit" onClick={getQueryFuncByKey(key)} justicon="true" round="true">
+                         <Search />
+                     </Button>
+                </div>
+            </div>
+        )
+    }
 
     function showTableData() {
         return (
@@ -272,72 +326,7 @@ function SerachDao({history}) {
                 <h4 className={classes.cardTitleWhite}>{t("search_dao")}</h4>
             </CardHeader>
             <CardBody>
-                <div className={classes.typoTwo}>
-                    <div className={classes.note} >
-                            {t('query_by_name')}
-                    </div>
-                    <div className={classes.searchWrapperLeft} >
-                        <CustomInput
-                            formControlProps={{
-                                className:classes.addressTxt
-                            }}
-                            inputProps={{
-                                placeholder: t("input_dao_name"),
-                                inputProps: {
-                                    "aria-label": "dao_name"
-                                },
-                                onChange:handleChange('daoname_query')
-                            }}
-                     />
-                         <Button color="primary" aria-label="edit" onClick={queryByName} justicon="true" round="true">
-                             <Search />
-                         </Button>
-                   </div>
-               </div>
-               <div className={classes.typoTwo}>
-                   <div className={classes.note} >
-                        {t('query_by_address')}
-                   </div>
-                   <div className={classes.searchWrapperLeft} >
-                       <CustomInput
-                           formControlProps={{
-                               className:classes.addressTxt
-                           }}
-                           inputProps={{
-                               placeholder: t("input_dao_address"),
-                               inputProps: {
-                                   "aria-label": "dao_address"
-                               },
-                               onChange:handleChange('daoaddress_query')
-                           }}
-                       />
-                       <Button color="primary" aria-label="edit" onClick={queryByAddress} justicon="true" round="true">
-                           <Search />
-                       </Button>
-                   </div>
-               </div>
-               <div className={classes.typoTwo}>
-                   <div className={classes.note} >
-                            {t('query_by_creator')}
-                   </div>
-                   <div className={classes.searchWrapperLeft} >
-                       <CustomInput
-                           formControlProps={{
-                               className:classes.addressTxt
-                           }}
-                           inputProps={{
-                               placeholder: t("input_dao_creator"),
-                               inputProps: {
-                                   "aria-label": "dao_creator"
-                               },
-                               onChange:handleChange('daocreator_query')
-                           }}
-                       />
-                       <Button color="primary" aria-label="edit" onClick={queryByCreator} justicon="true" round="true">
-                           <Search />
-                       </Button>
-                     </div>
-                 </div>
+                {showSearchUI()}
             </CardBody>
         </Card>
        {amount > 1 && showTableData()}

@@ -22,11 +22,14 @@ export default function Provider({children}) {
             show:false,
             pos:'left',
             message:'',
-            type:'success',
+            type:'',
             closeNotification:null
         })
     }
     const showSnackbar = (message,type,closeNotification) => {
+        if(!type){
+            type = 'info'
+        }
         setSnackbar({
                show:true,
                pos:'left',
