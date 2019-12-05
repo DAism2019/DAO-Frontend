@@ -676,7 +676,7 @@ function TemplateOne({template_address}) {
 
     //show erc20 token transfer ui
     function show20TokenTransfer() {
-        const {token_symbol,token_balance,get_token_info,token_address,transferValue,
+        const {token_symbol,token_balance,get_token_info,token_20_address,transferValue,
             get_info_over,recipient} = state
         return (
             <div>
@@ -689,12 +689,14 @@ function TemplateOne({template_address}) {
                    </div>
                    <CustomInput formControlProps={{
                            className: classes.addressTxt
-                       }} inputProps={{
+                       }}
+                       inputProps={{
                            placeholder: t("token_20_address"),
                            inputProps: {
                                "aria-label": "SetLabel"
                            },
-                           value:token_address,
+                           style:{fontSize: isMobile ? "13px" : "18px"},
+                           value:token_20_address,
                            onChange: handleChange('token_20_address')
                        }}/>
                 </div>
@@ -709,6 +711,7 @@ function TemplateOne({template_address}) {
                            inputProps: {
                                "aria-label": "SetLabel"
                            },
+                           style:{fontSize: isMobile ? "13px" : "18px"},
                            disabled:true,
                            value:get_token_info ? t('getting') : token_symbol,
                        }}/>
@@ -723,6 +726,7 @@ function TemplateOne({template_address}) {
                            inputProps: {
                                "aria-label": "SetLabel"
                            },
+                           style:{fontSize: isMobile ? "13px" : "18px"},
                            disabled:true,
                            value:get_token_info ? t('getting') : token_balance,
                        }}/>
@@ -741,6 +745,7 @@ function TemplateOne({template_address}) {
                            inputProps: {
                                "aria-label": "SetLabel"
                            },
+                           style:{fontSize: isMobile ? "13px" : "18px"},
                            value:recipient,
                            onChange: handleChange('recipient')
                        }}/>
@@ -751,12 +756,14 @@ function TemplateOne({template_address}) {
                    </div>
                    <CustomInput formControlProps={{
                            className: classes.addressTxt
-                       }} inputProps={{
+                       }}
+                       inputProps={{
                            placeholder: t("transfer_20_token_amount"),
                            inputProps: {
                                "aria-label": "SetLabel"
                            },
                            value:transferValue,
+                           style:{fontSize: isMobile ? "13px" : "18px"},
                            onChange: handleChange("transferValue")
                        }}/>
                        <span>

@@ -38,7 +38,7 @@ function CustomInput({ ...props }) {
     labelProps,
     inputProps,
     error,
-    success
+    success,
   } = props;
 
   const labelClasses = classNames({
@@ -53,6 +53,7 @@ function CustomInput({ ...props }) {
   const marginTop = classNames({
     [classes.marginTop]: labelText === undefined
   });
+
   return (
     <FormControl
       {...formControlProps}
@@ -71,7 +72,7 @@ function CustomInput({ ...props }) {
         classes={{
           root: marginTop,
           disabled: classes.disabled,
-          underline: underlineClasses
+          underline: underlineClasses,
         }}
         id={id}
         {...inputProps}
