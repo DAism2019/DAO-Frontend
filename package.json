@@ -1,7 +1,7 @@
 {
   "name": "DaoStore",
   "version": "1.0.0",
-  "description": "This is a  project of registering a dao in multiSignWallet",
+  "description": "This is a  project of registering a dao by multiSignWallet on ethereum",
   "private": false,
   "main": "dist/index.js",
   "homepage": ".",

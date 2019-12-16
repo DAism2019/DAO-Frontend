@@ -147,7 +147,7 @@ export default function AllDapp() {
               <CardBody>
                 <Table
                   tableHeaderColor="primary"
-                  tableHead={[t("name"),t("address"),t("create_time")]}
+                  tableHead={[t("dao_name"),t("dao_address"),t("create_time")]}
                   tableData={tableData}
                 />
               </CardBody>

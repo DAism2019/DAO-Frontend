@@ -39,18 +39,19 @@ const dashboardRoutes = [
         component: AllDaos,
         layout: "/"
     },
-    {
-        path: "admin",
-        name: "dao_admin",
-        icon: FormatAlignJustifyIcon,
-        component: DaoAdmin,
-        layout: "/"
-    },
+
     {
         path: "register",
         name: "register_dao",
         icon: Unarchive,
         component: RegisterDao,
+        layout: "/"
+    },
+    {
+        path: "admin",
+        name: "dao_admin",
+        icon: FormatAlignJustifyIcon,
+        component: DaoAdmin,
         layout: "/"
     },
     // {

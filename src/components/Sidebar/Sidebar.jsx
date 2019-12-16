@@ -34,7 +34,7 @@ import AdminNavbarLinks from "components/Navbars/AdminNavbarLinks.jsx";
 import RTLNavbarLinks from "components/Navbars/RTLNavbarLinks.jsx";
 
 import sidebarStyle from "assets/jss/material-dashboard-react/components/sidebarStyle.jsx";
-import dhonor_logo from "../../assets/img/logowhite.svg"
+// import dhonor_logo from "../../assets/img/logowhite.svg"
 
 import {I18n} from 'i18next'
 
@@ -149,8 +149,8 @@ const Sidebar = ({ ...props }) => {
           target="_blank"
         >
             <div style={{ display: 'flex',flexDirection: 'column',alignItems: 'center'}}>
-
-              <img src={dhonor_logo} style={{width:"80%"}}/>
+                    DAism
+              {/* <img src={dhonor_logo} style={{width:"80%"}}/> */}
           </div>
         {/* {logoText} */}
       </a>

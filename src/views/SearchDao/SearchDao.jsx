@@ -267,7 +267,7 @@ function SerachDao({history}) {
                             className:classes.addressTxt
                         }}
                         inputProps={{
-                            placeholder: t("input" + key),
+                            placeholder: t("input_" + key),
                             inputProps: {
                                 "aria-label":key
                             },
@@ -298,7 +298,7 @@ function SerachDao({history}) {
                   <CardBody>
                     <Table
                       tableHeaderColor="primary"
-                      tableHead={[t("name"),t("address"),t("create_time")]}
+                      tableHead={[t("dao_name"),t("dao_address"),t("create_time")]}
                       tableData={tableData}
                     />
                   </CardBody>
